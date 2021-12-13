@@ -8,16 +8,15 @@ import { isNull } from "lodash";
 import path from "path";
 import * as uuid from "uuid";
 import type { ClusterStoreModel } from "../../common/cluster-store/cluster-store";
+import { computeDefaultShortName } from "../../common/catalog/helpers";
 import type { Hotbar, HotbarItem } from "../../common/hotbar-types";
 import { defaultHotbarCells, getEmptyHotbar } from "../../common/hotbar-types";
 import type { MigrationDeclaration } from "../helpers";
 import { migrationLog } from "../helpers";
 import { generateNewIdFor } from "../utils";
 import { getLegacyGlobalDiForExtensionApi } from "../../extensions/as-legacy-globals-for-extension-api/legacy-global-di-for-extension-api";
-import directoryForUserDataInjectable
-  from "../../common/app-paths/directory-for-user-data/directory-for-user-data.injectable";
-import catalogCatalogEntityInjectable
-  from "../../common/catalog-entities/general-catalog-entities/implementations/catalog-catalog-entity.injectable";
+import directoryForUserDataInjectable from "../../common/app-paths/directory-for-user-data/directory-for-user-data.injectable";
+import catalogCatalogEntityInjectable from "../../common/catalog-entities/general-catalog-entities/implementations/catalog-catalog-entity.injectable";
 
 interface Pre500WorkspaceStoreModel {
   workspaces: {
@@ -51,7 +50,14 @@ export default {
 
       const { metadata: { uid, name, source }} = catalogCatalogEntity;
 
-      hotbar.items[0] = { entity: { uid, name, source }};
+      hotbar.items[0] = {
+        entity: {
+          uid,
+          name,
+          source,
+          shortName: computeDefaultShortName(name),
+        },
+      };
 
       hotbars.push(hotbar);
     }
@@ -96,10 +102,13 @@ export default {
           migrationLog(`Adding cluster ${uid} to ${workspaceHotbar.name}`);
 
           if (workspaceHotbar?.items.length < defaultHotbarCells) {
+            const name = cluster.preferences.clusterName || cluster.contextName;
+
             workspaceHotbar.items.push({
               entity: {
                 uid: generateNewIdFor(cluster),
-                name: cluster.preferences.clusterName || cluster.contextName,
+                name,
+                shortName: computeDefaultShortName(name),
               },
             });
           }
@@ -141,15 +150,36 @@ export default {
             // called "default" is full than overriding a hotbar item
             const hotbar = getEmptyHotbar("initial");
 
-            hotbar.items[0] = { entity: { uid, name, source }};
+            hotbar.items[0] = {
+              entity: {
+                uid,
+                name,
+                source,
+                shortName: computeDefaultShortName(name),
+              },
+            };
             hotbars.unshift(hotbar);
           } else {
-            defaultHotbar.items[freeIndex] = { entity: { uid, name, source }};
+            defaultHotbar.items[freeIndex] = {
+              entity: {
+                uid,
+                name,
+                source,
+                shortName: computeDefaultShortName(name),
+              },
+            };
           }
         } else {
           const hotbar = getEmptyHotbar("default");
 
-          hotbar.items[0] = { entity: { uid, name, source }};
+          hotbar.items[0] = {
+            entity: {
+              uid,
+              name,
+              source,
+              shortName: computeDefaultShortName(name),
+            },
+          };
           hotbars.unshift(hotbar);
         }
       }
