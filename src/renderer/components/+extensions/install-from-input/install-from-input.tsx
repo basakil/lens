@@ -37,8 +37,8 @@ export const installFromInput = ({
       disposer = extensionInstallationStateStore.startPreInstall();
       const request = await fetch(input, { timeout: 10 * 60 * 1000 });
 
-      if (request.status === 404) {
-        Notifications.error("Failed to install extension. Does not exist.");
+      if (request.status < 200 || 300 <= request.status) {
+        Notifications.error(`Failed to download extension: ${request.statusText}`);
 
         return disposer();
       }

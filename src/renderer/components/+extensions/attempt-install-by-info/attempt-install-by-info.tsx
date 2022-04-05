@@ -45,8 +45,8 @@ export const attemptInstallByInfo = ({
   try {
     const request = await fetch(registryUrl);
 
-    if (request.status === 404) {
-      Notifications.error(`Failed to get registry information for that extension: does not exist.`);
+    if (request.status < 200 || 300 <= request.status) {
+      Notifications.error(`Failed to get registry information for that extension: ${request.statusText}`);
 
       return disposer();
     }
@@ -126,8 +126,8 @@ export const attemptInstallByInfo = ({
   const fileName = path.basename(url);
   const request = await fetch(url, { timeout: 10 * 60 * 1000 });
 
-  if (request.status === 404) {
-    Notifications.error("Failed to download extension. Does not exist.");
+  if (request.status < 200 || 300 <= request.status) {
+    Notifications.error(`Failed to download extension: ${request.statusText}`);
 
     return disposer();
   }
