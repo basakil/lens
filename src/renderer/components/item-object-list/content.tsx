@@ -22,11 +22,15 @@ import { Spinner } from "../spinner";
 import type { ItemObject, ItemStore } from "../../../common/item.store";
 import type { Filter } from "./page-filters.store";
 import { pageFilters } from "./page-filters.store";
-import { ThemeStore } from "../../theme.store";
+import type { ThemeStore } from "../../theme.store";
 import { MenuActions } from "../menu/menu-actions";
 import { MenuItem } from "../menu";
 import { Checkbox } from "../checkbox";
-import { UserStore } from "../../../common/user-store";
+import type { UserStore } from "../../../common/user-store";
+import { withInjectables } from "@ogre-tools/injectable-react";
+
+import themeStoreInjectable from "../../theme-store.injectable";
+import userStoreInjectable from "../../../common/user-store/user-store.injectable";
 
 export interface ItemListLayoutContentProps<I extends ItemObject> {
   getFilters: () => Filter[];
@@ -63,9 +67,14 @@ export interface ItemListLayoutContentProps<I extends ItemObject> {
   failedToLoadMessage?: React.ReactNode;
 }
 
+interface Dependencies {
+  themeStore: ThemeStore;
+  userStore: UserStore;
+}
+
 @observer
-export class ItemListLayoutContent<I extends ItemObject> extends React.Component<ItemListLayoutContentProps<I>> {
-  constructor(props: ItemListLayoutContentProps<I>) {
+class NonInjectedItemListLayoutContent<I extends ItemObject> extends React.Component<Dependencies & ItemListLayoutContentProps<I>> {
+  constructor(props: Dependencies & ItemListLayoutContentProps<I>) {
     super(props);
     makeObservable(this);
     autoBind(this);
@@ -249,7 +258,7 @@ export class ItemListLayoutContent<I extends ItemObject> extends React.Component
       detailsItem, className, tableProps = {}, tableId, getItems,
     } = this.props;
     const selectedItemId = detailsItem && detailsItem.getId();
-    const classNames = cssNames(className, "box", "grow", ThemeStore.getInstance().activeTheme.type);
+    const classNames = cssNames(className, "box", "grow", this.props.themeStore.activeTheme.type);
     const items = getItems();
     const selectedItems = store.pickOnlySelected(items);
 
@@ -292,7 +301,7 @@ export class ItemListLayoutContent<I extends ItemObject> extends React.Component
   showColumn({ id: columnId, showWithColumn }: TableCellProps): boolean {
     const { tableId, isConfigurable } = this.props;
 
-    return !isConfigurable || !UserStore.getInstance().isTableColumnHidden(tableId, columnId, showWithColumn);
+    return !isConfigurable || !this.props.userStore.isTableColumnHidden(tableId, columnId, showWithColumn);
   }
 
   renderColumnVisibilityMenu() {
@@ -306,7 +315,7 @@ export class ItemListLayoutContent<I extends ItemObject> extends React.Component
               <Checkbox
                 label={cellProps.title ?? `<${cellProps.className}>`}
                 value={this.showColumn(cellProps)}
-                onChange={() => UserStore.getInstance().toggleTableColumnVisibility(tableId, cellProps.id)}
+                onChange={() => this.props.userStore.toggleTableColumnVisibility(tableId, cellProps.id)}
               />
             </MenuItem>
           )
@@ -314,4 +323,21 @@ export class ItemListLayoutContent<I extends ItemObject> extends React.Component
       </MenuActions>
     );
   }
+}
+
+const InjectedItemListLayoutContent = withInjectables<Dependencies, ItemListLayoutContentProps<ItemObject>>(
+  NonInjectedItemListLayoutContent,
+  {
+    getProps: (di, props) => ({
+      themeStore: di.inject(themeStoreInjectable),
+      userStore: di.inject(userStoreInjectable),
+      ...props,
+    }),
+  },
+);
+
+export function ItemListLayoutContent<I extends ItemObject>(
+  props: ItemListLayoutContentProps<I>,
+) {
+  return <InjectedItemListLayoutContent {...props} />;
 }
