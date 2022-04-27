@@ -124,7 +124,7 @@ export async function bootstrap(di: DiContainer) {
   await clusterStore.loadInitialOnRenderer();
 
   // HotbarStore depends on: ClusterStore
-  di.inject(hotbarStoreInjectable);
+  di.inject(hotbarStoreInjectable).load();
 
   // ThemeStore depends on: UserStore
   // TODO: Remove temporal dependencies
