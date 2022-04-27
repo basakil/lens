@@ -12,14 +12,6 @@ import type { MenuItemOpts } from "./application-menu-items.injectable";
 
 export type MenuTopId = "mac" | "file" | "edit" | "view" | "help";
 
-export function initMenu(
-  applicationMenuItems: IComputedValue<MenuItemOpts[]>,
-) {
-  return autorun(() => buildMenu(applicationMenuItems.get()), {
-    delay: 100,
-  });
-}
-
 export function showAbout(browserWindow: BrowserWindow) {
   const appInfo = [
     `${appName}: ${app.getVersion()}`,
