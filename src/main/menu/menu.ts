@@ -4,8 +4,6 @@
  */
 import type { BrowserWindow } from "electron";
 import { app, dialog, Menu } from "electron";
-import type { IComputedValue } from "mobx";
-import { autorun } from "mobx";
 import { appName, isWindows, productName } from "../../common/vars";
 import packageJson from "../../../package.json";
 import type { MenuItemOpts } from "./application-menu-items.injectable";
